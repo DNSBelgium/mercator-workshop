@@ -1,0 +1,23 @@
+.mytoc li a {
+    border-style: none !important; /* remove theme style */
+    min-width: 10px;
+}
+.mytoc li a::before {
+    content: '○ ';
+}
+.mytoc li a:hover {
+    color: cornflowerblue;
+}
+.mytoc > ul {
+    list-style: none;
+}
+
+.footnotes-sep {
+    @apply mt-0 opacity-10;
+}
+.footnotes {
+    @apply absolute bottom-0 left-8 text-sm opacity-75;
+}
+.footnote-backref {
+    display: none;
+}
