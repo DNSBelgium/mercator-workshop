@@ -198,7 +198,7 @@ What is Helm ? What is a Helm chart ? TODO
 curl -fsSL -o get_helm.sh https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3
 chmod 700 get_helm.sh
 ./get_helm.sh
-helm version # version.BuildInfo{Version:"v3.8.0", GitCommit:"d14138609b01886f544b2025f5000351c9eb092e", GitTreeState:"clean", GoVersion:"go1.17.5"}
+helm version # version.BuildInfo{Version:"v3.8.0", ...}
 ```
 
 ---
@@ -253,7 +253,8 @@ With a single command, you create and start all the services from your configura
 ##### Installation
 
 ```shell
-sudo curl -L "https://github.com/docker/compose/releases/download/1.29.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+sudo curl -L "https://github.com/docker/compose/releases/download/1.29.2/docker-compose-$(uname -s)-$(uname -m)" \
+-o /usr/local/bin/docker-compose
 sudo chmod +x /usr/local/bin/docker-compose
 docker-compose --version # docker-compose version 1.29.2, build 5becea4c
 ```
