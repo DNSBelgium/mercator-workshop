@@ -6,9 +6,13 @@
     "export": "slidev export"
   },
   "dependencies": {
-    "@slidev/cli": "^0.28.9",
+    "@slidev/cli": "^0.28.10",
     "@slidev/theme-default": "*",
     "@slidev/theme-seriph": "*"
   },
-  "name": "mercator-workshop"
+  "name": "mercator-workshop",
+  "devDependencies": {
+    "@iconify-json/ic": "^1.1.1",
+    "@iconify-json/mdi": "^1.1.1"
+  }
 }

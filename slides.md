@@ -151,24 +151,55 @@ h1 {
 }
 </style>
 
+
 ---
 
-## Requirements
+# Environment setup
+<div></div>
 
 You will need several things to build mercator
 
-* Java 17
+* Java 11+
+* Docker
+* Docker-compose (for running Mercator locally)
 * Helm 3
 
+<br />
+<div>
+If you want to run mercator, you also need a Maxmind license (see <a @click="$slidev.nav.go(12)">Maxmind</a>).
+</div>
+
+---
+
+# Cloud9
+<div></div>
+
+In this workshop, we use AWS Cloud9, an IDE in the cloud.
+Cloud9 offers a linux environment with some tool pre-installed like Java or Docker.
+
+We are going to use some extra tool during this workshop:
+* Postgresql client to connect to the DB
+* jq to parse JSON in the command-line
+
+<br />
+
 ```shell
-git clone https://github.com/DNSBelgium/mercator.git
-cd mercator
-./gradlew build -x test
+sudo yum install postgresql jq
 ```
 
-<div>
-If you want to run the tests, you also need Docker and a Maxmind license (see <a @click="$slidev.nav.next">Maxmind</a>).
-</div>
+---
+
+# Helm
+Kubernetes package manager
+
+What is Helm ? What is a Helm chart ? TODO
+
+```shell
+curl -fsSL -o get_helm.sh https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3
+chmod 700 get_helm.sh
+./get_helm.sh
+helm version # version.BuildInfo{Version:"v3.8.0", GitCommit:"d14138609b01886f544b2025f5000351c9eb092e", GitTreeState:"clean", GoVersion:"go1.17.5"}
+```
 
 ---
 
@@ -182,8 +213,19 @@ MAXMIND_LICENSE_KEY=mysecretkey
 EOF
 ```
 
-
 [^1]: [Source](https://support.maxmind.com/hc/en-us/articles/4407111582235-Generate-a-License-Key)
+
+---
+
+## Build Mercator
+
+Clone the git repo and use [Gradle](https://gradle.org/) to build Mercator
+
+```shell
+git clone https://github.com/DNSBelgium/mercator.git
+cd mercator
+./gradlew build -x test
+```
 
 ---
 layout: cover
@@ -191,7 +233,7 @@ dim: false
 background: /cover_docker3.jpg
 ---
 
-# Deploy Mercator using docker-compose
+# Run Mercator locally using docker-compose
 
 <style>
 h1 {
@@ -203,9 +245,10 @@ h1 {
 
 ## Docker-compose
 
-_Docker Compose [^1] is a tool for defining and running multi-container Docker applications.
+Docker Compose [^1] is a tool for defining and running multi-container Docker applications.
 A YAML file definition contains the definition of the application’s services.
-With a single command, you create and start all the services from your configuration._
+With a single command, you create and start all the services from your configuration.
+
 
 ##### Installation
 
@@ -220,10 +263,29 @@ docker-compose --version # docker-compose version 1.29.2, build 5becea4c
 ```shell
 cd mercator
 ./gradlew dockerBuild # Create local docker images
-docker-compose up -d localstack db
+docker-compose up -d
 ```
 
 [^1]: [Docker Compose](https://docs.docker.com/compose/)
+
+---
+
+## Docker-compose
+<div></div>
+<br />
+
+#### Connect to the DB
+
+```shell
+psql -h localhost -U postgres postgres
+```
+<br />
+
+#### See the logs
+
+```shell
+docker-compose logs -f dns-crawler
+```
 
 ---
 layout: cover
@@ -289,26 +351,18 @@ terraform apply
 
 ---
 
-## Helm
-
-What is Helm ? What is a Helm chart ?
-
-```shell
-curl -fsSL -o get_helm.sh https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3
-chmod 700 get_helm.sh
-./get_helm.sh 
-helm version # version.BuildInfo{Version:"v3.8.0", GitCommit:"d14138609b01886f544b2025f5000351c9eb092e", GitTreeState:"clean", GoVersion:"go1.17.5"}
-```
-
----
-
 ## Dashboarding
 
 ---
 layout: center
 class: text-center
+hideInToc: true
 ---
 
 # Learn More
 
-[DNS Belgium](https://dnsbelgium.be) · [Mercator GitHub](https://github.com/DNSBelgium/Mercator)
+<div>
+<ic:baseline-alternate-email /> <a href="https://dnsbelgium.be">DNS Belgium</a><br/><br/>
+<mdi:github /> <a href="https://github.com/DNSBelgium/Mercator">Mercator</a><br/><br/>
+<ic:baseline-email /> <a href="mailto:quentin.loos@dnsbelgium.be">Quentin Loos</a> · <a href="mailto:maarten.bosteels@dnsbelgium.be">Maarten Bosteels</a>
+</div>
