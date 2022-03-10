@@ -154,7 +154,7 @@ h1 {
 
 ---
 
-# Environment setup
+## Environment setup
 <div></div>
 
 You will need several things to build mercator
@@ -171,25 +171,33 @@ If you want to run mercator, you also need a Maxmind license (see <a @click="$sl
 
 ---
 
-# Cloud9
-<div></div>
+## Cloud9
 
 In this workshop, we use AWS Cloud9, an IDE in the cloud.
 Cloud9 offers a linux environment with some tool pre-installed like Java or Docker.
 
-We are going to use some extra tool during this workshop:
+We are going to use some extra tools during this workshop:
 * Postgresql client to connect to the DB
 * jq to parse JSON in the command-line
-
-<br />
 
 ```shell
 sudo yum install postgresql jq
 ```
 
+We also want to configure the AWS credentials in order to build the infrastructure.
+
+```shell
+git clone https://github.com/DNSBelgium/mercator-workshop-centr.git
+export DNS_AWS_KEY=<aws_key>
+export DNS_AWS_SECRET=<aws_secret>
+export DNS_MAXMIND_KEY=<maxmind_key>
+$(python console.py export)
+```
+
 ---
 
-# Helm
+## Helm
+
 Kubernetes package manager
 
 What is Helm ? What is a Helm chart ? TODO
@@ -209,7 +217,7 @@ Create a Maxmind account and generate a license key for Mercator. [^1]
 
 ```shell
 cat > .env <<EOF
-MAXMIND_LICENSE_KEY=mysecretkey
+MAXMIND_LICENSE_KEY=$DNS_MAXMIND_KEY
 EOF
 ```
 
@@ -272,20 +280,33 @@ docker-compose up -d
 ---
 
 ## Docker-compose
-<div></div>
-<br />
+
+#### Send a request to crawl
+
+```shell
+aws sqs --endpoint-url http://localhost:4566 send-message --queue-url $(aws sqs --endpoint-url \
+ http://localhost:4566 get-queue-url --queue-name mercator-dispatcher-input | jq -r .QueueUrl) \
+ --message-body '{"domainName": "dnsbelgium.be"}'
+```
+
+#### See the logs
+
+```shell
+docker-compose logs -f dns-crawler
+```
 
 #### Connect to the DB
 
 ```shell
 psql -h localhost -U postgres postgres
 ```
-<br />
 
-#### See the logs
+#### Explore the result
+
+TODO: Check redash for some usefull queries.
 
 ```shell
-docker-compose logs -f dns-crawler
+psql -h localhost -U postgres postgres
 ```
 
 ---
@@ -320,20 +341,9 @@ Storage
 
 ## Deploy Mercator in the cloud
 
-Terraform
+#### Terraform
 
-Terraform is an open-source infrastructure as code software tool that provides a consistent CLI workflow to manage hundreds of cloud services. Terraform codifies cloud APIs into declarative configuration files.
-
-
-
-------
-
-## Deploy Mercator in the cloud
-
-Cloud9
-
-cloud9
-
+Terraform is an open-source infrastructure-as-code software tool that provides a consistent CLI workflow to manage hundreds of cloud services. Terraform codifies cloud APIs into declarative configuration files.
 
 ---------
 
@@ -341,14 +351,59 @@ cloud9
 
 Create the basic infrastructure needed for Mercator (25m).
 
-This create the network space and the kubernetes cluster.
+This creates the network space and the kubernetes cluster.
 
 ```shell
-git clone blabla
+git clone https://github.com/DNSBelgium/mercator-infra-tf-aws.git
 cd mercator-infra-tf-aws
 terraform init
 terraform apply
 ```
+
+---
+
+## Host the docker image somewhere accessible
+
+In order for kubernetes to be able to pull docker images, they must be accessible.
+
+At DNS Belgium, we use AWS ECR to host docker image.
+
+We don't yet publicly publish docker images. For this workshop, we decided to host pre-built docker images in Github Packages.
+
+TODO
+
+---
+
+## Connect to the EKS cluster
+
+#### Tooling
+
+In order to connect to Kubernetes, we need some extra tools and setup:
+
+```shell
+curl -LO https://storage.googleapis.com/kubernetes-release/release/v1.23.4/bin/linux/amd64/kubectl
+chmod +x ./kubectl
+sudo mv ./kubectl /usr/local/bin/kubectl
+kubectl version --client # Client Version: version.Info{Major:"1", Minor:"23", GitVersion:"v1.23.4", ...}
+```
+
+```shell
+curl -LO https://github.com/derailed/k9s/releases/download/v0.25.18/k9s_Linux_x86_64.tar.gz
+tar xvf k9s_Linux_x86_64.tar.gz
+chmod +x k9s
+sudo mv ./k9s /usr/local/bin/k9s
+k9s version
+```
+
+```shell
+aws eks update-kubeconfig --name mercator
+kubectl get nodes
+```
+---
+
+## Install Helm charts
+
+TODO
 
 ---
 
