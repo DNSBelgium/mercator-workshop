@@ -164,10 +164,7 @@ You will need several things to build mercator
 * Docker-compose (for running Mercator locally)
 * Helm 3
 
-<br />
-<div>
-If you want to run mercator, you also need a Maxmind license (see <a @click="$slidev.nav.go(12)">Maxmind</a>).
-</div>
+If you want to run mercator, you also need a Maxmind license. Create an account and [generate a license key](https://support.maxmind.com/hc/en-us/articles/4407111582235-Generate-a-License-Key).
 
 ---
 
@@ -177,21 +174,36 @@ In this workshop, we use AWS Cloud9, an IDE in the cloud.
 Cloud9 offers a linux environment with some tool pre-installed like Java or Docker.
 
 We are going to use some extra tools during this workshop:
-* Postgresql client to connect to the DB
-* jq to parse JSON in the command-line
+* `postgresql` client to connect to the DB
+* `jq` and `yq` to parse JSON in the command-line
 
 ```shell
-sudo yum install postgresql jq
+sudo yum -y install postgresql
+sudo wget https://github.com/mikefarah/yq/releases/download/v4.22.1/yq_linux_amd64 -O /usr/bin/yq && \
+  sudo chmod +x /usr/bin/yq
+sudo wget https://github.com/stedolan/jq/releases/download/jq-1.6/jq-linux64 -O /usr/bin/jq && \
+  sudo chmod +x /usr/bin/jq
 ```
 
-We also want to configure the AWS credentials in order to build the infrastructure.
+---
+
+## Cloud9
+
+We also want to configure some environment variables for the AWS credentials in order to build the infrastructure, 
+the github credentials from cloning the repos and the maxmind key for running Mercator properly.
 
 ```shell
-git clone https://github.com/DNSBelgium/mercator-workshop-centr.git
 export DNS_AWS_KEY=<aws_key>
 export DNS_AWS_SECRET=<aws_secret>
 export DNS_MAXMIND_KEY=<maxmind_key>
-$(python console.py export)
+export GITHUB_TOKREN=<gh_token>
+git clone https://${GITHUB_TOKEN}@github.com/DNSBelgium/mercator-workshop-centr.git
+$(python mercator-workshop-centr/console.py export)
+```
+
+Finally, we need to add a bit more space on the disk
+```shell
+mercator-workshop-centr/resize.sh 50
 ```
 
 ---
@@ -211,26 +223,12 @@ helm version # version.BuildInfo{Version:"v3.8.0", ...}
 
 ---
 
-## Maxmind
-
-Create a Maxmind account and generate a license key for Mercator. [^1]
-
-```shell
-cat > .env <<EOF
-MAXMIND_LICENSE_KEY=$DNS_MAXMIND_KEY
-EOF
-```
-
-[^1]: [Source](https://support.maxmind.com/hc/en-us/articles/4407111582235-Generate-a-License-Key)
-
----
-
 ## Build Mercator
 
 Clone the git repo and use [Gradle](https://gradle.org/) to build Mercator
 
 ```shell
-git clone https://github.com/DNSBelgium/mercator.git
+git clone https://${GITHUB_TOKEN}@github.com/DNSBelgium/mercator.git
 cd mercator
 ./gradlew build -x test
 ```
@@ -272,6 +270,9 @@ docker-compose --version # docker-compose version 1.29.2, build 5becea4c
 ```shell
 cd mercator
 ./gradlew dockerBuild # Create local docker images
+cat > .env <<EOF
+MAXMIND_LICENSE_KEY=$DNS_MAXMIND_KEY
+EOF
 docker-compose up -d
 ```
 
@@ -354,9 +355,10 @@ Create the basic infrastructure needed for Mercator (25m).
 This creates the network space and the kubernetes cluster.
 
 ```shell
-git clone https://github.com/DNSBelgium/mercator-infra-tf-aws.git
+git clone https://${GITHUB_TOKEN}@github.com/DNSBelgium/mercator-infra-tf-aws.git
 cd mercator-infra-tf-aws
-terraform init
+export AWS_ACCOUNT_ID=$(aws sts get-caller-identity --query "Account" --output text)
+terraform init -backend-config="bucket=mercator-workshop-setup-terraform-${AWS_ACCOUNT_ID}"
 terraform apply
 ```
 
@@ -403,7 +405,7 @@ kubectl get nodes
 
 ## Install Helm charts
 
-TODO
+We first need to setup some configuration.
 
 ---
 

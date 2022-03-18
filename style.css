@@ -29,3 +29,10 @@ h2 {
 h2 {
     @apply text-3xl mb-4 -ml-[0.05em];
 }
+
+:not(pre) code {
+    color: slategrey;
+}
+:not(pre) code::before, :not(pre) code::after {
+    content: "";
+}
