@@ -193,17 +193,18 @@ We also want to configure some environment variables for the AWS credentials in 
 the github credentials from cloning the repos and the maxmind key for running Mercator properly.
 
 ```shell
-export DNS_AWS_KEY=<aws_key>
-export DNS_AWS_SECRET=<aws_secret>
+export DNS_AWS_ACCESS_KEY=<aws_key>
+export DNS_AWS_SECRET_KEY=<aws_secret>
 export DNS_MAXMIND_KEY=<maxmind_key>
-export GITHUB_TOKREN=<gh_token>
+export GITHUB_TOKEN=<gh_token>
 git clone https://${GITHUB_TOKEN}@github.com/DNSBelgium/mercator-workshop-centr.git
-$(python mercator-workshop-centr/console.py export)
+sudo pip install boto3
+$(python mercator-workshop-centr/aws_assume_role.py export) # no output if successful
 ```
 
 Finally, we need to add a bit more space on the disk
 ```shell
-mercator-workshop-centr/resize.sh 50
+mercator-workshop-centr/resize_ebs.sh 50
 ```
 
 ---
@@ -230,7 +231,7 @@ Clone the git repo and use [Gradle](https://gradle.org/) to build Mercator
 ```shell
 git clone https://${GITHUB_TOKEN}@github.com/DNSBelgium/mercator.git
 cd mercator
-./gradlew build -x test
+./gradlew build -x test # 5 min
 ```
 
 ---
@@ -260,7 +261,7 @@ With a single command, you create and start all the services from your configura
 
 ```shell
 sudo curl -L "https://github.com/docker/compose/releases/download/1.29.2/docker-compose-$(uname -s)-$(uname -m)" \
--o /usr/local/bin/docker-compose
+  -o /usr/local/bin/docker-compose
 sudo chmod +x /usr/local/bin/docker-compose
 docker-compose --version # docker-compose version 1.29.2, build 5becea4c
 ```
@@ -268,8 +269,8 @@ docker-compose --version # docker-compose version 1.29.2, build 5becea4c
 ##### Run Mercator
 
 ```shell
-cd mercator
-./gradlew dockerBuild # Create local docker images
+cd ~/environment/mercator
+./gradlew dockerBuild # Create local docker images (7m)
 cat > .env <<EOF
 MAXMIND_LICENSE_KEY=$DNS_MAXMIND_KEY
 EOF
