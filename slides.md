@@ -228,9 +228,7 @@ mercator-workshop-centr/resize_ebs.sh 50
 
 ## Helm
 
-Kubernetes package manager
-
-What is Helm ? What is a Helm chart ? TODO
+Helm is a Kubernetes package manager. It allows easy management of kubernetes resources.
 
 ```shell
 curl -fsSL -o get_helm.sh https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3
@@ -238,6 +236,8 @@ chmod 700 get_helm.sh
 ./get_helm.sh
 helm version # version.BuildInfo{Version:"v3.8.0", ...}
 ```
+
+More information on Helm will follow ...
 
 ---
 
@@ -250,6 +250,8 @@ git clone https://${GITHUB_TOKEN}@github.com/DNSBelgium/mercator.git
 cd mercator
 ./gradlew build -x test # 5 min
 ```
+
+Gradle will compile the subprojects. It is also able to create the docker images and the Helm charts as we will see in the next slides.
 
 ---
 layout: cover
@@ -283,10 +285,15 @@ sudo chmod +x /usr/local/bin/docker-compose
 docker-compose --version # docker-compose version 1.29.2, build 5becea4c
 ```
 
-##### Run Mercator
+##### Create docker images
 
 ```shell
 ./gradlew dockerBuild # Create local docker images (7m)
+```
+
+##### Run Mercator
+
+```shell
 cat > .env <<EOF
 MAXMIND_LICENSE_KEY=$DNS_MAXMIND_KEY
 EOF
@@ -337,29 +344,25 @@ background: https://sli.dev/demo-cover.png
 ---
 
 
-## Deploy Mercator in the cloud
+## AWS
 
-AWS
-
-Amazon Web Services offers reliable, scalable, and inexpensive cloud computing services.
+_Amazon Web Services_ offers reliable, scalable, and inexpensive cloud computing services including :
 
 ##### SQS
 
-queues
+_Simple Queue Service_ is a distributed message queuing service. It enables you to decouple and scale microservices and distributed systems.
 
 ##### EKS
 
-Kubernetes Cluster
+_Elastic Kubernetes Service_ is a managed Kubernetes cluster by AWS.
 
 ##### S3
 
-Storage
+_Simple Storage Service_ is an object storage service
 
 ---
 
-## Deploy Mercator in the cloud
-
-#### Terraform
+## Terraform
 
 Terraform is an open-source infrastructure-as-code software tool that provides a consistent CLI workflow to manage hundreds of cloud services. Terraform codifies cloud APIs into declarative configuration files.
 
@@ -421,20 +424,31 @@ kubectl get nodes
 
 ## Install Helm charts
 
-We first need to setup some configuration.
+In mercator, each component has its own Helm chart. In order to install them all at once, we've created an umbrella chart, that depends on all component's chart.
 
-helm upgrade -f ~/environment/mercator-infra-tf-aws/values.yaml mercator mercator-helm-umbrella
+```shell
+helm dependency build mercator-helm-umbrella
+helm install -f ~/environment/mercator-infra-tf-aws/values.yaml mercator mercator-helm-umbrella
+```
+
+You can then see the pods with kubectl (or k9s).
+
+```shell
+kubectl get deployments
+```
+
+Send message to the crawler
+
+```shell
+aws sqs send-message --queue-url $(aws sqs get-queue-url \ 
+  --queue-name mercator-dispatcher-input | jq -r .QueueUrl) --message-body '{"domainName": "dnsbelgium.be"}'
+```
 
 ---
-
-## Send message to the crawler
-
-aws sqs list-queues
-aws sqs send-message --queue-url $(aws sqs get-queue-url --queue-name mercator-dispatcher-input | jq -r .QueueUrl) --message-body '{"domainName": "dnsbelgium.be"}'
-
+layout: cover
+dim: false
+background: https://upload.wikimedia.org/wikipedia/commons/e/ea/Thats_all_folks.svg
 ---
-
-## Dashboarding
 
 ---
 layout: center
