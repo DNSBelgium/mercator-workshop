@@ -64,16 +64,19 @@ layout: intro
 
 # DNS Belgium
 
+* Registry for .be, .brussels and .vlaanderen
+* 1.750.000+ domains names
+
 ---
 layout: intro
 ---
 
 # Mercator Design goals
 
-Mercator was built with severals goals in mind
+Mercator was built with several goals in mind
 
 * 💪 **Robustness**: Components should gracefully handle the unexpected
-* 🐘 **Scalability**: Crawl .be zone (1.7M domains) in 24 hours
+* 🐘 **Scalability**: Crawl .be zone in 24 hours
 * 🤸 **Extensibility**: New components should not disrupt the working of other components
 * 🔍 **Observability**: Be able to quickly spot
   * 🚴 performance issues
@@ -105,6 +108,26 @@ layout: two-cols
 layout: two-cols
 ---
 
+## Functionality
+
+* Use headless chrome to take screenshots + fetch HTML
+* Fetches DNS records
+* Geo IP on A & AAAA
+* Detects over 950 web technologies using Wappalyzer
+* Talks SMTP
+* VAT crawler (follows links until VAT found or max depth)
+* Extract HTML features (#social media links, …)
+* Language detection
+* REST API + basic UI
+
+::right::
+
+<img src="/images_mercator_architecture.png" alt="Mercator Architecure" class="m-0 h-110 w-110">
+
+---
+layout: two-cols
+---
+
 ## Technology
 
 * Amazon SQS => automatic retries + DLQ
@@ -119,17 +142,7 @@ layout: two-cols
 
 ::right::
 
-## Functionality
-
-* Use headless chrome to take screenshots + fetch HTML
-* Fetches DNS records
-* Geo IP on A & AAAA
-* Detects over 950 web technologies using Wappalyzer
-* Talks SMTP
-* VAT crawler (follows links until VAT found or max depth)
-* Extract HTML features (#social media links, …)
-* Language detection
-* REST API + basic UI
+<img src="/images_mercator_architecture.png" alt="Mercator Architecure" class="m-0 h-110 w-110">
 
 ---
 
@@ -151,11 +164,9 @@ h1 {
 }
 </style>
 
-
 ---
 
 ## Environment setup
-<div></div>
 
 You will need several things to build mercator
 
@@ -179,8 +190,12 @@ We are going to use some extra tools during this workshop:
 
 ```shell
 sudo yum -y install postgresql
+```
+```shell
 sudo wget https://github.com/mikefarah/yq/releases/download/v4.22.1/yq_linux_amd64 -O /usr/bin/yq && \
   sudo chmod +x /usr/bin/yq
+```
+```shell
 sudo wget https://github.com/stedolan/jq/releases/download/jq-1.6/jq-linux64 -O /usr/bin/jq && \
   sudo chmod +x /usr/bin/jq
 ```
@@ -197,6 +212,8 @@ export DNS_AWS_ACCESS_KEY=<aws_key>
 export DNS_AWS_SECRET_KEY=<aws_secret>
 export DNS_MAXMIND_KEY=<maxmind_key>
 export GITHUB_TOKEN=<gh_token>
+```
+```shell
 git clone https://${GITHUB_TOKEN}@github.com/DNSBelgium/mercator-workshop-centr.git
 sudo pip install boto3
 $(python mercator-workshop-centr/aws_assume_role.py export) # no output if successful
@@ -269,7 +286,6 @@ docker-compose --version # docker-compose version 1.29.2, build 5becea4c
 ##### Run Mercator
 
 ```shell
-cd ~/environment/mercator
 ./gradlew dockerBuild # Create local docker images (7m)
 cat > .env <<EOF
 MAXMIND_LICENSE_KEY=$DNS_MAXMIND_KEY
@@ -356,6 +372,7 @@ Create the basic infrastructure needed for Mercator (25m).
 This creates the network space and the kubernetes cluster.
 
 ```shell
+cd ~/environment/
 git clone https://${GITHUB_TOKEN}@github.com/DNSBelgium/mercator-infra-tf-aws.git
 cd mercator-infra-tf-aws
 export AWS_ACCOUNT_ID=$(aws sts get-caller-identity --query "Account" --output text)
@@ -369,9 +386,7 @@ terraform apply
 
 In order for kubernetes to be able to pull docker images, they must be accessible.
 
-At DNS Belgium, we use AWS ECR to host docker image.
-
-We don't yet publicly publish docker images. For this workshop, we decided to host pre-built docker images in Github Packages.
+At DNS Belgium, we use AWS ECR to host docker image. We don't yet publicly publish docker images for Mercator.
 
 TODO
 
@@ -407,6 +422,15 @@ kubectl get nodes
 ## Install Helm charts
 
 We first need to setup some configuration.
+
+helm upgrade -f ~/environment/mercator-infra-tf-aws/values.yaml mercator mercator-helm-umbrella
+
+---
+
+## Send message to the crawler
+
+aws sqs list-queues
+aws sqs send-message --queue-url $(aws sqs get-queue-url --queue-name mercator-dispatcher-input | jq -r .QueueUrl) --message-body '{"domainName": "dnsbelgium.be"}'
 
 ---
 

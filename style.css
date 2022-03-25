@@ -36,3 +36,9 @@ h2 {
 :not(pre) code::before, :not(pre) code::after {
     content: "";
 }
+
+.ctc-button {
+    position:absolute;
+    top:6px;
+    right:6px;
+}
