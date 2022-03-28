@@ -150,14 +150,14 @@ layout: two-cols
 ## Dashboarding
 
 
-![Crawl rates](d-1.png)
+![Crawl rates](/d-1.png)
 
 ---
 
 ## Scaling on Kubernetes
 
 
-![Crawl rates](d-2.png)
+![Crawl rates](/d-2.png)
 
 ---
 
