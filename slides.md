@@ -60,18 +60,19 @@ hideInToc: true
 
 ---
 layout: intro
+hideInToc: true
 ---
 
 # DNS Belgium
 
 * Registry for .be, .brussels and .vlaanderen
-* 1.750.000+ domains names
+* 1.750.000+ domain names
 
 ---
 layout: intro
 ---
 
-# Mercator Design goals
+# Mercator's design goals
 
 Mercator was built with several goals in mind
 
@@ -148,34 +149,36 @@ layout: two-cols
 
 ## Dashboarding
 
-TODO
+
+![Crawl rates](d-1.png)
+
+---
+
+## Scaling on Kubernetes
+
+
+![Crawl rates](d-2.png)
+
+---
+
+## Pipelines
+
+<img src="/d-3.png" class="m-0 h-100" />
+<img src="/d-4.png" class="absolute top-24 right-10 h-100" />
 
 ---
 layout: cover
 dim: false
-background: /dariusz-sankowski.jpg
+background: https://images.unsplash.com/photo-1499951360447-b19be8fe80f5?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=3270&q=80
 ---
 
-# Build Mercator
+# <div class="text-amber-500">Environment setup</div>
 
 <style>
 h1 {
-  @apply absolute top-35 left-80 text-black;
+  @apply absolute top-30 left-5;
 }
 </style>
-
----
-
-## Environment setup
-
-You will need several things to build mercator
-
-* Java 11+
-* Docker
-* Docker-compose (for running Mercator locally)
-* Helm 3
-
-If you want to run mercator, you also need a Maxmind license. Create an account and [generate a license key](https://support.maxmind.com/hc/en-us/articles/4407111582235-Generate-a-License-Key).
 
 ---
 
@@ -183,6 +186,9 @@ If you want to run mercator, you also need a Maxmind license. Create an account 
 
 In this workshop, we use AWS Cloud9, an IDE in the cloud.
 Cloud9 offers a linux environment with some tool pre-installed like Java or Docker.
+
+> To open your Cloud9 environment, you first need to login to AWS using the signin url you received by mail.
+Next, you can access your Cloud9 environment with the Cloud9 link in the same email.
 
 We are going to use some extra tools during this workshop:
 * `postgresql` client to connect to the DB
@@ -204,25 +210,67 @@ sudo wget https://github.com/stedolan/jq/releases/download/jq-1.6/jq-linux64 -O 
 
 ## Cloud9
 
-We also want to configure some environment variables for the AWS credentials in order to build the infrastructure, 
-the github credentials from cloning the repos and the maxmind key for running Mercator properly.
+We also want to configure the AWS credentials in order to build the infrastructure
+
+> You normally received by email the necessary credentials, something like :
+> ```shell
+> export DNS_AWS_ACCESS_KEY=<aws_key>
+> export DNS_AWS_SECRET_KEY=<aws_secret>
+> export DNS_MAXMIND_KEY=<maxmind_key>
+> ```
+> You can copy paste that block into the cloud9 console.
+
+Best to add it to the bash profile in case you open new tabs
 
 ```shell
-export DNS_AWS_ACCESS_KEY=<aws_key>
-export DNS_AWS_SECRET_KEY=<aws_secret>
-export DNS_MAXMIND_KEY=<maxmind_key>
-export GITHUB_TOKEN=<gh_token>
+echo 'export DNS_AWS_ACCESS_KEY=$DNS_AWS_ACCESS_KEY' >>~/.bash_profile
+echo 'export DNS_AWS_SECRET_KEY=$DNS_AWS_SECRET_KEY' >>~/.bash_profile
+echo 'export DNS_MAXMIND_KEY=$DNS_MAXMIND_KEY' >>~/.bash_profile
 ```
+
+---
+
+## Cloud9
+
+Once environemnt variables are setup, we can use the following script to request temporary credentials for AWS.
+Boto3 is a AWS SDK for Python.
+
 ```shell
-git clone https://${GITHUB_TOKEN}@github.com/DNSBelgium/mercator-workshop-centr.git
+git clone https://github.com/DNSBelgium/mercator-workshop-centr.git
 sudo pip install boto3
 $(python mercator-workshop-centr/aws_assume_role.py export) # no output if successful
 ```
 
-Finally, we need to add a bit more space on the disk
+Finally, we need to add a bit more space on the disk. The following will change the size of the disk attached to your cloud9 environment.
 ```shell
 mercator-workshop-centr/resize_ebs.sh 50
 ```
+
+---
+layout: cover
+dim: false
+background: /dariusz-sankowski.jpg
+---
+
+# Build Mercator
+
+<style>
+h1 {
+  @apply absolute top-35 left-80 text-black;
+}
+</style>
+
+---
+## Environment setup
+
+You will need several things to build mercator
+
+* Java 11+
+* Docker
+* Docker-compose (for running Mercator locally)
+* Helm 3
+
+If you want to run mercator, you also need a Maxmind license. Create an account and [generate a license key](https://support.maxmind.com/hc/en-us/articles/4407111582235-Generate-a-License-Key).
 
 ---
 
@@ -230,14 +278,18 @@ mercator-workshop-centr/resize_ebs.sh 50
 
 Helm is a Kubernetes package manager. It allows easy management of kubernetes resources.
 
+> Helm is used by Gradle to build Mercator's Helm charts
+
+To install Helm:
+
 ```shell
 curl -fsSL -o get_helm.sh https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3
 chmod 700 get_helm.sh
 ./get_helm.sh
-helm version # version.BuildInfo{Version:"v3.8.0", ...}
+helm version # version.BuildInfo{Version:"v3.8.1", ...}
 ```
 
-More information on Helm will follow ...
+We will go deeper into Helm once we deploy Mercator to Kubernetes.
 
 ---
 
@@ -246,7 +298,7 @@ More information on Helm will follow ...
 Clone the git repo and use [Gradle](https://gradle.org/) to build Mercator
 
 ```shell
-git clone https://${GITHUB_TOKEN}@github.com/DNSBelgium/mercator.git
+git clone https://github.com/DNSBelgium/mercator.git
 cd mercator
 ./gradlew build -x test # 5 min
 ```
@@ -317,22 +369,55 @@ aws sqs --endpoint-url http://localhost:4566 send-message --queue-url $(aws sqs 
 #### See the logs
 
 ```shell
-docker-compose logs -f dns-crawler
+docker-compose logs dns-crawler
 ```
 
-#### Connect to the DB
+#### Connect to the DB and explore the result
 
 ```shell
-psql -h localhost -U postgres postgres
+PGPASSWORD=password psql -h localhost -U postgres postgres -f usefulequeries/count_names_crawled.sql
 ```
 
-#### Explore the result
-
-TODO: Check redash for some usefull queries.
+#### Destroy the local environment
 
 ```shell
-psql -h localhost -U postgres postgres
+docker-compose down
 ```
+
+---
+layout: two-cols
+---
+
+## Some .be domains
+
+* hln.be
+* vrt.be
+* youtu.be
+* google.be
+* telenet.be
+* rtbf.be
+* sudinfo.be
+* belgium.be
+* 2dehands.be
+* proximus.be
+* zalanda.be
+
+::right::
+
+* ns5.be
+* openprovider.be
+* groupon.be
+* yt.be
+* adidas.be
+* stepstone.be
+* irisnet.be
+* aviation24.be
+* bnpparibasfortis.be
+* bpost2.be
+* nbb.be
+* hubo.be
+* acerta.be
+* denk-it.be
 
 ---
 layout: cover
@@ -343,22 +428,24 @@ background: https://sli.dev/demo-cover.png
 
 ---
 
+<img src="https://www.hestia-it.be/wp-content/uploads/2016/08/aws.png" class="absolute top-3 right-10 h-20" />
 
 ## AWS
 
 _Amazon Web Services_ offers reliable, scalable, and inexpensive cloud computing services including :
 
-##### SQS
+##### **SQS** <img src="https://www.logiciels.pro/wp-content/uploads/2021/05/amazon-sqs-avis-prix-alternatives-logiciel.webp" class="inline-block h-9" />
 
 _Simple Queue Service_ is a distributed message queuing service. It enables you to decouple and scale microservices and distributed systems.
 
-##### EKS
+##### **EKS** <img src="https://www.logiciels.pro/wp-content/uploads/2021/05/amazon-eks-avis-prix-alternatives-logiciel.webp" class="inline-block h-9" />
 
 _Elastic Kubernetes Service_ is a managed Kubernetes cluster by AWS.
 
-##### S3
+##### **S3** <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/b/bc/Amazon-S3-Logo.svg/1200px-Amazon-S3-Logo.svg.png" class="inline-block h-9" />
 
-_Simple Storage Service_ is an object storage service
+_Simple Storage Service_ is an object storage service.
+
 
 ---
 
@@ -376,22 +463,38 @@ This creates the network space and the kubernetes cluster.
 
 ```shell
 cd ~/environment/
-git clone https://${GITHUB_TOKEN}@github.com/DNSBelgium/mercator-infra-tf-aws.git
+git clone https://github.com/DNSBelgium/mercator-infra-tf-aws.git
 cd mercator-infra-tf-aws
 export AWS_ACCOUNT_ID=$(aws sts get-caller-identity --query "Account" --output text)
 terraform init -backend-config="bucket=mercator-workshop-setup-terraform-${AWS_ACCOUNT_ID}"
-terraform apply
+terraform apply --auto-approve
 ```
+
+The following creates :
+- VPC and subnets
+- VPC endpoints for accessing AWS services (SQS, ECR, ...)
+- SQS queues
+- S3 buckets
+- ECR repositories
+- An IAM role for Mercator
+- A PostgreSQL database
+- A Kubernetes cluster
 
 ---
 
-## Host the docker image somewhere accessible
+## Push the docker image
 
-In order for kubernetes to be able to pull docker images, they must be accessible.
-
+In order for Kubernetes to be able to pull docker images, they must be accessible.
 At DNS Belgium, we use AWS ECR to host docker image. We don't yet publicly publish docker images for Mercator.
 
-TODO
+Terraform created the required ECR repository. We can push the previously built docker image with Gradle.
+
+```shell
+aws ecr get-login-password | docker login -u AWS --password-stdin \
+  ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com
+./gradlew dockerBuildAndPush -PdockerRegistry=${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com \
+  -PdockerTags=workshop
+```
 
 ---
 
@@ -426,7 +529,16 @@ kubectl get nodes
 
 In mercator, each component has its own Helm chart. In order to install them all at once, we've created an umbrella chart, that depends on all component's chart.
 
+We first need to get the different parameter from terraform into helm. The following script will generate a values.yaml file with all parameters for your account.
+
 ```shell
+./generate_helm_values.sh
+```
+
+We can then use helm to install Mercator on Kubernetes
+
+```shell
+cd ~/environment/mercator
 helm dependency build mercator-helm-umbrella
 helm install -f ~/environment/mercator-infra-tf-aws/values.yaml mercator mercator-helm-umbrella
 ```
@@ -435,13 +547,25 @@ You can then see the pods with kubectl (or k9s).
 
 ```shell
 kubectl get deployments
+# or
+k9s # (Ctrl-C to exit)
 ```
+
+---
+
+## Deploy Mercator to the cloud
 
 Send message to the crawler
 
 ```shell
-aws sqs send-message --queue-url $(aws sqs get-queue-url \ 
-  --queue-name mercator-dispatcher-input | jq -r .QueueUrl) --message-body '{"domainName": "dnsbelgium.be"}'
+aws sqs send-message --queue-url $(aws sqs get-queue-url --queue-name mercator-dispatcher-input \
+ | jq -r .QueueUrl) --message-body '{"domainName": "dnsbelgium.be"}'
+```
+
+Access Mercator-ui
+
+```shell
+kubectl port-forward svc/mercator-mercator-ui 8080:80
 ```
 
 ---

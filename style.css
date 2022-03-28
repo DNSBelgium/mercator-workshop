@@ -42,3 +42,7 @@ h2 {
     top:6px;
     right:6px;
 }
+
+.slidev-layout li {
+    @apply leading-1.2em;
+}
