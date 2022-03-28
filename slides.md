@@ -56,7 +56,7 @@ hideInToc: true
 
 # Table of contents
 
-<Toc class="mytoc" columns="1" maxDepth="1" minDepth="1" mode="all" />
+<Toc listClass="mytoc" columns="1" maxDepth="1" minDepth="1" mode="all" />
 
 ---
 layout: intro
@@ -172,11 +172,11 @@ dim: false
 background: https://images.unsplash.com/photo-1499951360447-b19be8fe80f5?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=3270&q=80
 ---
 
-# <div class="text-amber-500">Environment setup</div>
+# Environment setup
 
 <style>
 h1 {
-  @apply absolute top-30 left-5;
+  @apply absolute -bottom-2 left-5 text-amber-500;
 }
 </style>
 
