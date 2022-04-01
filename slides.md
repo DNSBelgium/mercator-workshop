@@ -490,9 +490,10 @@ At DNS Belgium, we use AWS ECR to host docker image. We don't yet publicly publi
 Terraform created the required ECR repository. We can push the previously built docker image with Gradle.
 
 ```shell
+cd ~/environment/mercator
 aws ecr get-login-password | docker login -u AWS --password-stdin \
   ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com
-./gradlew dockerBuildAndPush -PdockerRegistry=${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com \
+./gradlew dockerBuildAndPush -PdockerRegistry=${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/ \
   -PdockerTags=workshop
 ```
 
