@@ -223,9 +223,9 @@ We also want to configure the AWS credentials in order to build the infrastructu
 Best to add it to the bash profile in case you open new tabs
 
 ```shell
-echo 'export DNS_AWS_ACCESS_KEY=$DNS_AWS_ACCESS_KEY' >>~/.bash_profile
-echo 'export DNS_AWS_SECRET_KEY=$DNS_AWS_SECRET_KEY' >>~/.bash_profile
-echo 'export DNS_MAXMIND_KEY=$DNS_MAXMIND_KEY' >>~/.bash_profile
+echo "export DNS_AWS_ACCESS_KEY=$DNS_AWS_ACCESS_KEY" >>~/.bash_profile
+echo "export DNS_AWS_SECRET_KEY=$DNS_AWS_SECRET_KEY" >>~/.bash_profile
+echo "export DNS_MAXMIND_KEY=$DNS_MAXMIND_KEY" >>~/.bash_profile
 ```
 
 ---
